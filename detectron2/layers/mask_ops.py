@@ -103,7 +103,7 @@ def paste_masks_in_image(
     assert masks.shape[-1] == masks.shape[-2], "Only square mask predictions are supported"
     N = len(masks)
     if N == 0:
-        return masks.new_empty((0,) + image_shape, dtype=torch.uint8)
+        return masks.new_empty((0,) + image_shape, dtype=torch.float)
     if not isinstance(boxes, torch.Tensor):
         boxes = boxes.tensor
     device = boxes.device
@@ -127,18 +127,18 @@ def paste_masks_in_image(
     chunks = torch.chunk(torch.arange(N, device=device), num_chunks)
 
     img_masks = torch.zeros(
-        N, img_h, img_w, device=device, dtype=torch.bool if threshold >= 0 else torch.uint8
+        N, img_h, img_w, device=device, dtype=masks.dtype
     )
     for inds in chunks:
         masks_chunk, spatial_inds = _do_paste_mask(
             masks[inds, None, :, :], boxes[inds], img_h, img_w, skip_empty=device.type == "cpu"
         )
 
-        if threshold >= 0:
-            masks_chunk = (masks_chunk >= threshold).to(dtype=torch.bool)
-        else:
-            # for visualization and debugging
-            masks_chunk = (masks_chunk * 255).to(dtype=torch.uint8)
+        # if threshold >= 0:
+        #     masks_chunk = (masks_chunk >= threshold).to(dtype=torch.bool)
+        # else:
+        #     # for visualization and debugging
+        #     masks_chunk = (masks_chunk * 255).to(dtype=torch.uint8)
 
         if torch.jit.is_scripting():  # Scripting does not use the optimized codepath
             img_masks[inds] = masks_chunk
