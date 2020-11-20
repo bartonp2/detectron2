@@ -4,3 +4,7 @@ MODEL:
   MASK_ON: True
   RESNETS:
     DEPTH: 50
+  PIXEL_MEAN: (0, 0, 0)
+  PIXEL_STD: (1,1,1)
+INPUT:
+  MIN_SIZE_TRAIN: (640,)
